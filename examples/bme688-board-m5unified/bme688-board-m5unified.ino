@@ -31,6 +31,7 @@ char WIFI_STS_STR[WIFI_STS_MAX][8] = {
 #endif /* defined(UPLOAD_DATA_EN) */
 
 const int CPU_FREQ_MHZ = 80;
+const int BATT_LV_0    = 30;
 
 int i2c_scl_pin = 26;
 int i2c_sda_pin = 0;
@@ -47,14 +48,26 @@ enum D_STS {
   ,D_STS_MEASURING
   ,D_STS_MAX
 };
+#if defined(LANG_JA_EN)
+char D_STS_MSG[D_STS_MAX][64] = {
+   ""
+  ,"初期化中..."
+  ,"ﾃﾞﾊﾞｲｽが見つかりません。"
+  ,"ﾃﾞｰﾀの送信に失敗しました。"
+  ,"ﾃﾞｰﾀの読み取りに失敗しました。"
+  ,"測定中..."
+};
+#else
 char D_STS_MSG[D_STS_MAX][32] = {
    "                      "
-  ,"Initializing...       "
-  ,"Device not found.     "
-  ,"Network Amb. error.   "
-  ,"Can not read data.    "
-  ,"Measuring...          "
+  ,"Initializing..."
+  ,"Device not found."
+  ,"Failed to send data."
+  ,"Failed to read data."
+  ,"Measuring..."
 };
+#endif /* LANG_JA_EN */
+
 D_STS currentSts = D_STS_NO_ERR;
 B_TYPE boardType = B_TYPE_NOT_SUPPORT;
 
@@ -116,6 +129,7 @@ const uint8_t LED_DATA_PIN  = 27;
 uint8_t ledTotalNum       = 1;
 CRGB leds[25];
 CRGB valLedColor[D_TYPE_MAX];
+const lgfx::IFont* defaultFont;
 
 unsigned long timeUpdateMs = 0;
 unsigned long timeUploadMs = 0;
@@ -133,31 +147,38 @@ void newDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bse
 void initSensor();
 
 void drawTitle() {
+#if defined(LANG_JA_EN)
+  const char* title = "空気質モニタ (BME688)";
+#else
   const char* title = "AQ Monitor (BME688)";
+#endif /* LANG_JA_EN */
+  M5.Display.setFont(defaultFont);
+  M5.Display.setTextSize(1.00);
   switch (boardType) {
     case B_TYPE_M5STACK:
       M5.Display.setTextSize(1.25);
-      M5.Display.setFont(&fonts::AsciiFont8x16);
       M5.Display.setCursor(M5.Display.width()/2 - M5.Display.textWidth(title)/2, 0);
       M5.Display.fillRect(0, 0, M5.Display.width(), 0, BLACK);
       break;
     case B_TYPE_M5STICKC:
+#if defined(LANG_JA_EN)
+      title = "空気質BME688";
+#else
       title = "AQ Mon.BME688";
-      M5.Display.setTextSize(1.00);
-      M5.Display.setFont(&fonts::Font0);
+#endif /* LANG_JA_EN */
       M5.Display.setCursor(M5.Display.width()/2 - M5.Display.textWidth(title)/2, 0);
       M5.Display.fillRect(0, 0, M5.Display.width(), 0, BLACK);
       break;
     case B_TYPE_M5STICKC_PLUS:
+#if defined(LANG_JA_EN)
+      title = "空気質ﾓﾆﾀ(BME688)";
+#else
       title = "AQ Mon.(BME688)";
-      M5.Display.setTextSize(1.00);
-      M5.Display.setFont(&fonts::AsciiFont8x16);
+#endif /* LANG_JA_EN */
       M5.Display.setCursor(M5.Display.width()/2 - M5.Display.textWidth(title)/2, 0);
       M5.Display.fillRect(0, 0, M5.Display.width(), 0, BLACK);
       break;
     case B_TYPE_M5STACK_COREINK:
-      M5.Display.setTextSize(1.00);
-      M5.Display.setFont(&fonts::AsciiFont8x16);
       M5.Display.setCursor(M5.Display.width()/2 - M5.Display.textWidth(title)/2, 0);
       M5.Display.setTextColor(BLACK);
       M5.Display.fillRect(0, 0, M5.Display.width(), 0, WHITE);
@@ -172,28 +193,23 @@ void drawTitle() {
 }
 
 void drawSts(D_STS sts) {
+  M5.Display.setFont(defaultFont);
+  M5.Display.setTextSize(1.00);
   switch (boardType) {
     case B_TYPE_M5STACK:
       M5.Display.setTextSize(1.25);
-      M5.Display.setFont(&fonts::AsciiFont8x16);
       M5.Display.setCursor(0, 20);
       M5.Display.fillRect(0, 20, M5.Display.width(), 20, BLACK);
       break;
     case B_TYPE_M5STICKC:
-      M5.Display.setTextSize(1.00);
-      M5.Display.setFont(&fonts::Font0);
-      M5.Display.setCursor(0, 10);
-      M5.Display.fillRect(0, 10, M5.Display.width(), 10, BLACK);
+      M5.Display.setCursor(0, 12);
+      M5.Display.fillRect(0, 12, M5.Display.width(), 12, BLACK);
       break;
     case B_TYPE_M5STICKC_PLUS:
-      M5.Display.setTextSize(1.00);
-      M5.Display.setFont(&fonts::AsciiFont8x16);
       M5.Display.setCursor(0, 20);
       M5.Display.fillRect(0, 20, M5.Display.width(), 20, BLACK);
       break;
     case B_TYPE_M5STACK_COREINK:
-      M5.Display.setTextSize(1.00);
-      M5.Display.setFont(&fonts::AsciiFont8x16);
       M5.Display.setCursor(0, 16);
       M5.Display.setTextColor(BLACK);
       M5.Display.fillRect(0, 16, M5.Display.width(), 16, WHITE);
@@ -235,6 +251,11 @@ void InitM5() {
   if (upload_interval_sec < 30) {
     upload_interval_sec = 30;
   }
+#if defined(LANG_JA_EN)
+  defaultFont = &fonts::lgfxJapanGothic_16;
+#else
+  defaultFont = &fonts::AsciiFont8x16;
+#endif /* LANG_JA_EN */
   switch (M5.getBoard()) {
     case m5::board_t::board_M5Stack:
       boardType = B_TYPE_M5STACK;
@@ -251,6 +272,11 @@ void InitM5() {
       bDispEn = true;
       bDispLcdEn = true;
       bBattEquipped = true;
+#if defined(LANG_JA_EN)
+      defaultFont = &fonts::lgfxJapanGothic_12;
+#else
+      defaultFont = &fonts::Font0;
+#endif /* LANG_JA_EN */
       break;
     case m5::board_t::board_M5StickCPlus:
       boardType = B_TYPE_M5STICKC_PLUS;
@@ -344,7 +370,6 @@ void CheckBsecSts(Bsec2 bsec) {
     Serial.println("BSEC warning code : " + String(bsec.status));
     currentSts = D_STS_READ_DATA_ERR;
   }
-
   if (bsec.sensor.status < BME68X_OK) {
     Serial.println("BME68X error code : " + String(bsec.sensor.status));
     currentSts = D_STS_READ_DATA_ERR;
@@ -404,35 +429,30 @@ void UpdateAlertSts() {
 
 #if defined(UPLOAD_DATA_EN)
 void drawWiFiSts(WIFI_STS wifiSts) {
+  M5.Display.setFont(defaultFont);
+  M5.Display.setTextSize(1.00);
   if (bDispEn) {
     switch (boardType) {
       case B_TYPE_M5STACK:
         M5.Display.setTextSize(1.25);
-        M5.Display.setFont(&fonts::AsciiFont8x16);
         M5.Display.setTextColor(WHITE);
         M5.Display.fillRect(16, 208, M5.Display.textWidth(WIFI_STS_STR[wifiSts]), M5.Display.fontHeight(), BLACK);
         M5.Display.setCursor(16, 208);
         M5.Display.print(WIFI_STS_STR[wifiSts]);
         break;
       case B_TYPE_M5STICKC:
-        M5.Display.setTextSize(1.0);
-        M5.Display.setFont(&fonts::Font0);
         M5.Display.setTextColor(WHITE);
-        M5.Display.fillRect(0, 144, M5.Display.textWidth(WIFI_STS_STR[wifiSts]), M5.Display.fontHeight(), BLACK);
-        M5.Display.setCursor(0, 144);
+        M5.Display.fillRect(0, 148, M5.Display.textWidth(WIFI_STS_STR[wifiSts]), M5.Display.fontHeight(), BLACK);
+        M5.Display.setCursor(0, 148);
         M5.Display.print(WIFI_STS_STR[wifiSts]);
         break;
       case B_TYPE_M5STICKC_PLUS:
-        M5.Display.setTextSize(1.0);
-        M5.Display.setFont(&fonts::AsciiFont8x16);
         M5.Display.setTextColor(WHITE);
         M5.Display.fillRect(0, 208, M5.Display.textWidth(WIFI_STS_STR[wifiSts]), M5.Display.fontHeight(), BLACK);
         M5.Display.setCursor(0, 208);
         M5.Display.print(WIFI_STS_STR[wifiSts]);
         break;
       case B_TYPE_M5STACK_COREINK:
-        M5.Display.setTextSize(1.0);
-        M5.Display.setFont(&fonts::AsciiFont8x16);
         M5.Display.fillRect(8, 184, M5.Display.textWidth(WIFI_STS_STR[wifiSts]), M5.Display.fontHeight(), WHITE);
         M5.Display.setCursor(8, 184);
         M5.Display.print(WIFI_STS_STR[wifiSts]);
@@ -462,7 +482,7 @@ void updateDisp() {
         M5.Display.fillRect(0, 20, M5.Display.width(), M5.Display.height()-20, BLACK);
         for (int i = 0; i < DISP_VAL_NUM; i++) {
           M5.Display.setTextSize(1.25);
-          M5.Display.setFont(&fonts::AsciiFont8x16);
+          M5.Display.setFont(defaultFont);
           M5.Display.setTextColor(WHITE);
           M5.Display.setCursor(16, 58*i+40);
           M5.Display.print(D_TYPE_LABEL_STR[DISP_VAL[dispPage][i]]);
@@ -477,40 +497,40 @@ void updateDisp() {
           M5.Display.setTextDatum(TL_DATUM);
         }
         M5.Display.setTextSize(1.25);
-        M5.Display.setFont(&fonts::AsciiFont8x16);
+        M5.Display.setFont(defaultFont);
         M5.Display.setTextColor(WHITE);
         M5.Display.setCursor(M5.Display.width()-M5.Display.textWidth(drawValBattStr)-16, 208);
         M5.Display.print(drawValBattStr);
         break;
       case B_TYPE_M5STICKC:
-        M5.Display.fillRect(0, 10, M5.Display.width(), M5.Display.height()-10, BLACK);
+        M5.Display.fillRect(0, 12, M5.Display.width(), M5.Display.height()-12, BLACK);
         for (int i = 0; i < DISP_VAL_NUM; i++) {
           M5.Display.setTextSize(1.0);
-          M5.Display.setFont(&fonts::Font0);
+          M5.Display.setFont(defaultFont);
           M5.Display.setTextColor(WHITE);
-          M5.Display.setCursor(0, 40*i+30);
+          M5.Display.setCursor(0, 36*i+30);
           M5.Display.print(D_TYPE_LABEL_STR[DISP_VAL[dispPage][i]]);
-          M5.Display.setCursor(M5.Display.width()-18, 40*i+48);
+          M5.Display.setCursor(M5.Display.width()-18, 36*i+50);
           M5.Display.print(D_TYPE_UNIT_STR[DISP_VAL[dispPage][i]]);
           M5.Display.setTextSize(0.8);
           M5.Display.setFont(&fonts::Font4);
           M5.Display.setTextColor(valDispColor[DISP_VAL[dispPage][i]]);
-          M5.Display.setCursor(M5.Display.width()-20-M5.Display.textWidth(valStr[DISP_VAL[dispPage][i]]), 40*i+40);
+          M5.Display.setCursor(M5.Display.width()-20-M5.Display.textWidth(valStr[DISP_VAL[dispPage][i]]), 36*i+44);
           M5.Display.setTextDatum(TR_DATUM);
           M5.Display.print(valStr[DISP_VAL[dispPage][i]]);
           M5.Display.setTextDatum(TL_DATUM);
         }
         M5.Display.setTextSize(1.0);
-        M5.Display.setFont(&fonts::Font0);
+        M5.Display.setFont(defaultFont);
         M5.Display.setTextColor(WHITE);
-        M5.Display.setCursor(M5.Display.width()-M5.Display.textWidth(drawValBattStr), 144);
+        M5.Display.setCursor(M5.Display.width()-M5.Display.textWidth(drawValBattStr), 148);
         M5.Display.print(drawValBattStr);
         break;
       case B_TYPE_M5STICKC_PLUS:
         M5.Display.fillRect(0, 20, M5.Display.width(), M5.Display.height()-20, BLACK);
         for (int i = 0; i < DISP_VAL_NUM; i++) {
           M5.Display.setTextSize(1.0);
-          M5.Display.setFont(&fonts::AsciiFont8x16);
+          M5.Display.setFont(defaultFont);
           M5.Display.setTextColor(WHITE);
           M5.Display.setCursor(0, 50*i+40);
           M5.Display.print(D_TYPE_LABEL_STR[DISP_VAL[dispPage][i]]);
@@ -525,7 +545,7 @@ void updateDisp() {
           M5.Display.setTextDatum(TL_DATUM);
         }
         M5.Display.setTextSize(1.0);
-        M5.Display.setFont(&fonts::AsciiFont8x16);
+        M5.Display.setFont(defaultFont);
         M5.Display.setTextColor(WHITE);
         M5.Display.setCursor(M5.Display.width()-M5.Display.textWidth(drawValBattStr), 208);
         M5.Display.print(drawValBattStr);
@@ -535,7 +555,7 @@ void updateDisp() {
         drawTitle();
         for (int i = 0; i < DISP_VAL_NUM; i++) {
           M5.Display.setTextSize(1.0);
-          M5.Display.setFont(&fonts::AsciiFont8x16);
+          M5.Display.setFont(defaultFont);
           M5.Display.setCursor(8,48*i+32);
           M5.Display.print(D_TYPE_LABEL_STR[DISP_VAL[dispPage][i]]);
           M5.Display.setCursor(M5.Display.width()-32,48*i+70);
@@ -548,7 +568,7 @@ void updateDisp() {
           M5.Display.setTextDatum(TL_DATUM);
         }
         M5.Display.setTextSize(1.0);
-        M5.Display.setFont(&fonts::AsciiFont8x16);
+        M5.Display.setFont(defaultFont);
         M5.Display.setCursor(M5.Display.width()-M5.Display.textWidth(drawValBattStr)-8,184);
         M5.Display.print(drawValBattStr);
         drawSts(currentSts);
@@ -653,9 +673,15 @@ void newDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bse
   }
 
   // Read battery level
-  int battery = M5.Power.getBatteryLevel();
-  sprintf(valBattVolPerStr,"%d",battery);
-  sprintf(drawValBattStr,"BATT:%3d%%",battery);
+  if (bBattEquipped) {
+    int battery = M5.Power.getBatteryLevel()-BATT_LV_0;
+    if (battery < 0) {
+      battery = 0;
+    }
+    battery = battery*100/(100-BATT_LV_0);
+    sprintf(valBattVolPerStr,"%d",battery);
+    sprintf(drawValBattStr,"B:%3d%%",battery);
+  }
   
   // serial print val
   for (int i = 0;i < D_TYPE_MAX; i++) {

@@ -37,7 +37,7 @@
   * <a href="https://docs.m5stack.com/en/quick_start/m5unified/helloworld" target="_blank">M5Unified</a>: 0.1.1
   * <a href="https://docs.m5stack.com/en/quick_start/m5gfx/m5gfx" target="_blank">M5GFX</a>: 0.1.1
   * <a href="https://ambidata.io/docs/esp8266/#library_import" target="_blank">Ambient ESP32 ESP8266 lib</a>: 1.0.3  
-  * <a href="https://github.com/dmadison/FastLED_NeoPixel" target="_blank">FastLED</a>: 3.5.0
+  * <a href="https://github.com/FastLED/FastLED" target="_blank">FastLED</a>: 3.5.0
 
   続いて、BME688用の以下ライブラリをリンク先からZIPファイルをダウンロード後、ライブラリをインストールします。  
   Arduino IDE: [スケッチ] -> [ライブラリをインクルード] -> [.ZIP形式のライブラリをインストール]
@@ -81,6 +81,7 @@
   | #define | 説明 |
 | ---- | ---- |
 | UPLOAD_DATA_EN | オンラインモード（Ambient）で使用する場合に有効にして、WIFI_SSID、WIFI_PASS、AMB_CH_ID、AMB_WR_KEY の値を指定してください。 |
+| LANG_JA_EN | 日本語表示にする場合に有効にしてください。対象はタイトル・各種状態表示・データのラベルと単位となりますが、データの値は英語と共通のフォントで変わりません。 |
   
   ネットワーク、他の設定は以下の通り。
   | 定数名 | 説明 |

@@ -2,6 +2,7 @@
 #define CONFIG_H
 
 //#define UPLOAD_DATA_EN    // Enable upload data to Ambient
+//#define LANG_JA_EN        // Enable Japanese
 
 #if defined(UPLOAD_DATA_EN)
 // WiFi Access Point
@@ -26,7 +27,32 @@ enum D_TYPE {
   ,D_TYPE_RAW_PRES  // Raw pressure
   ,D_TYPE_MAX
 };
+#if defined(LANG_JA_EN)
 // up to 4 characters
+char D_TYPE_LABEL_STR[D_TYPE_MAX][8] = {
+   "IAQ :"
+  ,"sIAQ:"
+  ,"eCO2:"
+  ,"bVOC:"
+  ,"温度:"
+  ,"温度:"
+  ,"湿度:"
+  ,"湿度:"
+  ,"気圧:"
+};
+// up to 3 characters
+char D_TYPE_UNIT_STR[D_TYPE_MAX][8] = {
+   ""
+  ,""
+  ,"ppm"
+  ,"ppm"
+  ,"℃"
+  ,"℃"
+  ,"%RH"
+  ,"%RH"
+  ,"hPa"
+};
+#else
 char D_TYPE_LABEL_STR[D_TYPE_MAX][8] = {
    "IAQ :"
   ,"sIAQ:"
@@ -50,6 +76,7 @@ char D_TYPE_UNIT_STR[D_TYPE_MAX][8] = {
   ,"%RH"
   ,"hPa"
 };
+#endif /* LANG_JA_EN */
 
 const int DISP_PAGE_NUM = 3;
 const int DISP_VAL_NUM = 3;
@@ -88,10 +115,10 @@ const float OFS_VAL[B_TYPE_MAX][D_TYPE_MAX] {
 // {  IAQ, sIAQ, eCO2, bVOC, rTMP, TEMP, rHMD, HUMI, PRES }
    {  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0 }
   ,{  0.0,  0.0,  0.0,  0.0, -3.0, -3.0,  9.0,  9.0,  0.0 } // M5Stack
-  ,{  0.0,  0.0,  0.0,  0.0, -4.2, -4.2, 13.0, 13.0,  0.0 } // M5StickC
-  ,{  0.0,  0.0,  0.0,  0.0, -4.2, -4.2, 13.0, 13.0,  0.0 } // M5StickC Plus
-  ,{  0.0,  0.0,  0.0,  0.0, -1.9, -1.9,  9.0,  9.0,  0.0 } // M5Stack CoreInk
-  ,{  0.0,  0.0,  0.0,  0.0, -2.4, -2.4,  9.4,  9.4,  0.0 } // M5Atom Lite/Matrix
+  ,{  0.0,  0.0,  0.0,  0.0, -3.6, -3.6, 12.8, 12.8,  0.0 } // M5StickC
+  ,{  0.0,  0.0,  0.0,  0.0, -3.9, -3.9, 13.8, 13.8,  0.0 } // M5StickC Plus
+  ,{  0.0,  0.0,  0.0,  0.0, -1.2, -1.2,  6.6,  6.6,  0.0 } // M5Stack CoreInk
+  ,{  0.0,  0.0,  0.0,  0.0, -2.5, -2.5, 10.8, 10.8,  0.0 } // M5Atom Lite/Matrix
 };
 
 const float AL_SET_RANGE[D_TYPE_MAX][AL_LV_NUM][AL_RANGE_NUM] {
